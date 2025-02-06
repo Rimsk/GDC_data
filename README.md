@@ -27,7 +27,7 @@ Installation
 
 To use this pipeline, you can clone the repository to your local machine using Git:
 
-git clone https://github.com/your-username/gdc-download-pipeline.git
+git clone https://github.com/Rimsk/gdc-download-pipeline.git
 Alternatively, you can download the ZIP file directly from the repository page.
 
 Usage
