@@ -1,0 +1,464 @@
+---
+title: "GDC_data_download"
+author: "Rimpi Khurana"
+date: "2025-01-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(TCGAbiolinks)
+library(DESeq2)
+projects <- GDCquery()
+projects <- getGDCprojects()$project_id
+
+projects2 <- projects[grepl("TCGA-", projects)]
+
+#projects2 <- projects[grep("TARGET", projects)]
+#projects2 <- projects2[-c(1:3)]
+
+
+# Get the number of projects
+length(projects$results)
+
+#Apollo-LUAD
+query_exp_apollo_luad <- GDCquery(
+  project = "CMI-MBC",
+  data.category = "Transcriptome Profiling",
+  data.type = "Gene Expression Quantification", 
+  workflow.type = "STAR - Counts"
+)
+```
+
+
+```{r}
+query_exp_apollo_luad$results[[1]]
+GDCdownload(query_exp_apollo_luad)
+
+#prepare the LUAD data for further analysis
+exp_apollo_luad <- GDCprepare(
+  query = query_exp_apollo_luad 
+)
+
+
+gene_metadata <- rowData(exp_apollo_luad)
+head(gene_metadata)
+
+colData(exp_apollo_luad)
+
+raw_counts <- assay(exp_apollo_luad , "tpm_unstrand")
+head(colData(exp_apollo_luad))
+
+table(colData(exp_apollo_luad)$sample_type)
+
+Table <- gene_metadata[,c(5,7,6)]
+Table1 <- cbind(Table, raw_counts)
+
+Clinical_data <- colData(exp_luad )
+
+
+projects3 <- projects2
+               
+```
+
+
+```{r}
+
+BEATAML1.0-CRENOLANIB
+CGCI-BLGSP
+CGCI-HTMCP-CC
+CPTAC-2 
+CPTAC-3
+CTSP-DLBCL1
+EXCEPTIONAL_RESPONDERS-ER
+FM-AD
+HCMI-CMDC
+MATCH-B
+MATCH-C1
+MATCH-H
+MATCH-I
+MATCH-N
+MATCH-P
+MATCH-Q
+MATCH-R
+MATCH-S1
+MATCH-S2
+MATCH-U
+MATCH-W
+MATCH-Y
+MATCH-Z1A
+MATCH-Z1B
+MATCH-Z1D
+MATCH-Z1I
+REBC-THYR
+TRIO-CRU
+VAREPOP-APOLLO
+
+
+
+# Base directory where all the projects will be saved
+base_dir <- "/Users/rxk519/Desktop/Projects/GDC"
+
+               
+#projects2 <- projects[grep("MATCH-Z1I", projects)]
+#Done
+APOLLO-LUAD
+BEATAML1.0-COHORT
+BEATAML1.0-CRENOLANIB
+CDDP_EAGLE-1
+CGCI-BLGSP
+CGCI-HTMCP-DLBCL
+CGCI-HTMCP-LC
+CMI-ASC
+CMI-MBC
+CMI-MPC
+MMRF-COMMPASS
+MP2PRT-ALL
+MP2PRT-WT
+NCICCR-DLBCL
+ORGANOID-PANCREATIC
+OHSU-CNL
+TARGET-ALL-P1
+TARGET-ALL-P2
+TARGET-ALL-P3
+TARGET-AML
+TARGET-CCSK
+TARGET-NBL
+TARGET-OS
+TARGET-RT
+TARGET-WT
+WCDT-MCRPC
+TCGA-PCPG
+TCGA-THYM
+TCGA-STAD
+TCGA-TGCT
+TCGA-SARC
+TCGA-PRAD
+TCGA-PAAD
+TCGA-READ
+TCGA-UCS
+TCGA-UVM
+TCGA-KICH
+TCGA-HNSC
+TCGA-LUAD
+TCGA-LIHC
+TCGA-LUSC
+TCGA-MESO
+TCGA-LAML
+TCGA-LGG
+TCGA-KIRP
+TCGA-ACC
+TCGA-BLCA
+TCGA-DLBC
+TCGA-CHOL
+TCGA-CESC
+TCGA-COAD
+TCGA-BRCA
+TCGA-ESCA
+TCGA-GBM
+TCGA-OV
+TCGA-THCA
+TCGA-SKCM
+TCGA-UCEC
+
+
+#projects2 <- projects2[-c(1:17)]
+#projects2 <- projects2[-c(1,3)]
+# Loop over each project in the list
+for (project in projects2) {
+  # Create a directory for each project inside the base directory
+  project_dir <- file.path(base_dir, project)
+  dir.create(project_dir, showWarnings = FALSE)
+  
+  # Query and prepare data (adjust according to your use case)
+  query_exp <- GDCquery(project = project, data.category = "Transcriptome Profiling",workflow.type = "STAR - Counts",data.type = "Gene Expression Quantification")
+  
+  
+  # Download and prepare the data
+  GDCdownload(query_exp)
+  exp <- GDCprepare(query = query_exp)
+  
+  # Extract relevant data
+  gene_metadata <- rowData(exp)
+  raw_counts <- assay(exp, "tpm_unstrand")
+  Table <- gene_metadata[, c(5, 7, 6)]
+  Table1 <- cbind(Table, raw_counts)
+  Clinical_data <- colData(exp)
+  
+  # Convert Clinical_data to a data frame (if necessary)
+  if (inherits(Clinical_data, "DataFrame")) {
+    Clinical_data <- as.data.frame(Clinical_data)
+  }
+  
+  Clinical_data[] <- lapply(Clinical_data, function(x) {
+  if (inherits(x, "list")) {
+    # Flatten list elements into a single string for each row
+    return(sapply(x, function(y) paste(unlist(y), collapse = "; ")))
+  }
+  return(x)  # Leave non-list columns unchanged
+})
+  
+  
+  # Save the files with new naming conventions in the project-specific directory
+  write.csv(Table1, file.path(project_dir, paste0("Expression_", project, ".csv")), row.names = FALSE)
+  write.csv(Clinical_data, file.path(project_dir, paste0("clinical_", project, ".csv")), row.names = FALSE)
+  # Print a message for tracking progress
+  print(paste("Files for", project, "saved in directory", project_dir))
+}
+
+
+```
+
+#TARGET-ALL-P2
+```{r}
+
+#TARGET-ALL-P2
+query_exp <- GDCquery(project = "CGCI-BLGSP", data.category = "Transcriptome Profiling",workflow.type = "STAR - Counts",data.type = "Gene Expression Quantification")
+
+GDCdownload(query_exp, files.per.chunk = 50)
+exp <- GDCprepare(query = query_exp)
+exp
+  
+  # Extract relevant data
+  gene_metadata <- rowData(exp)
+  raw_counts <- assay(exp, "tpm_unstrand")
+  Table <- gene_metadata[, c(5, 7, 6)]
+  Table1 <- cbind(Table, raw_counts)
+  Clinical_data <- colData(exp)
+  
+  # Convert Clinical_data to a data frame (if necessary)
+  if (inherits(Clinical_data, "DataFrame")) {
+    Clinical_data <- as.data.frame(Clinical_data)
+  }
+  
+  Clinical_data[] <- lapply(Clinical_data, function(x) {
+  if (inherits(x, "list")) {
+    # Flatten list elements into a single string for each row
+    return(sapply(x, function(y) paste(unlist(y), collapse = "; ")))
+  }
+  return(x)  # Leave non-list columns unchanged
+})
+  
+  dir.create("/Users/rxk519/Desktop/Projects/GDC/CGCI-BLGSP", showWarnings = FALSE)
+  #base_dir <- "/Users/rxk519/Desktop/Projects/GDC/CGCI-BLGSP"
+#write.csv(Table1, file.path(project_dir, paste0("Expression_", project, ".csv")), row.names = FALSE)
+  #write.csv(Clinical_data, file.path(project_dir, paste0("clinical_", project, ".csv")), row.names = FALSE)
+  write.csv(Table1, "/Users/rxk519/Desktop/Projects/GDC/CGCI-BLGSP/Expression_CGCI_BLGSP.csv", row.names = FALSE)
+  
+  write.csv(Clinical_data, "/Users/rxk519/Desktop/Projects/GDC/CGCI-BLGSP/clinical_CGCI_BLGSP.csv", row.names = FALSE)
+
+```
+
+
+```{r}
+
+query_clinical <- GDCquery(
+    project = "CPTAC-2", 
+    data.category = "Transcriptome Profiling",  # Adjust category based on available data
+    data.type = "Gene Expression Quantification", 
+    workflow.type = "STAR - Counts" # Specify the type of data you're interested in
+)
+
+CPTAC2 <- data.frame(query_clinical$results[[1]])
+
+89b5ed3c-3a44-4e0b-8258-02290c6c5abe.rna_seq.augmented_star_gene_counts.tsv
+
+query_clinical <- GDCquery(
+    project = "CPTAC-2",
+    data.category = "Clinical",  # Ensure this is correctly specified
+    data.type = "Clinical Supplement"  # Or another data type relevant to clinical data
+)
+
+
+GDCdownload(query_clinical)
+
+clinical_data <- GDCprepare(query_clinical)
+
+
+
+
+
+query <- query_exp
+cases <- ifelse(grepl("CPTAC-2", 
+        query$results[[1]]$project %>% unlist()), query$results[[1]]$cases, 
+        query$results[[1]]$sample.submitter_id)
+    if (grepl("Transcriptome Profiling", query$data.category, 
+        ignore.case = TRUE)) {
+        if (unique(query$results[[1]]$experimental_strategy) == 
+            "scRNA-Seq") {
+            data <- readSingleCellAnalysis(files = files, data_format = unique(query$results[[1]]$data_format), 
+                workflow.type = unique(query$results[[1]]$analysis_workflow_type), 
+                cases = cases)
+            return(data)
+        }
+        else {
+            data <- readTranscriptomeProfiling(files = files, 
+                data.type = ifelse(!is.na(query$data.type), as.character(query$data.type), 
+                  unique(query$results[[1]]$data_type)), workflow.type = unique(query$results[[1]]$analysis_workflow_type), 
+                cases = cases, summarizedExperiment)
+        }
+    }
+
+```
+
+
+#merge the TCGA data 
+```{r}
+
+base <- "/Users/rxk519/Desktop/Projects/GDC"
+
+# List directories in the base directory, excluding the base directory itself
+folder_names <- list.dirs(base, full.names = FALSE, recursive = FALSE)
+
+# Print the folder names
+print(folder_names)
+files <- list()
+
+
+# Loop through each folder and get matching files
+for (folder in folder_names) {
+  # Construct the full path for the current folder
+  folder_path <- file.path(base, folder)
+  
+  # Get all files matching the pattern in the current folder
+  files_in_folder <- list.files(folder_path, pattern = "^Expression_.*\\.csv$", full.names = TRUE)
+  
+  # Add the matching files to the list
+  files <- c(files, files_in_folder)
+}
+
+
+
+# Print the list of files matching the pattern
+print(files)
+
+# Optionally: Read all matching files into a list of dataframes
+datasets <- lapply(files, read.csv)
+
+# Print the first few rows of the first dataset to check
+head(datasets[[1]])
+
+
+# Start with the first dataset (for merging)
+merged_data <- datasets[[1]]
+
+
+# Loop through remaining datasets and merge them by gene_id
+for (i in 2:length(datasets)) {
+  # Merge each dataset with the current merged_data by "gene_id"
+  merged_data <- merge(merged_data, datasets[[i]], by = "gene_id", all = TRUE)
+}
+
+# View the merged data (first few rows)
+head(merged_data)
+
+
+#example for 2 datasets
+
+#AL <-
+  read.csv("/Users/rxk519/Desktop/Projects/GDC/APOLLO-LUAD/Expression_APOLLO-LUAD.csv")
+
+#dim(AL)
+
+#TA <-read.csv("/Users/rxk519/Desktop/Projects/GDC/TCGA-ACC/Expression_TCGA-ACC.csv")
+
+
+```
+
+
+#check the file dimensions
+```{r}
+# Define the base directory
+base <- "/Users/rxk519/Desktop/Projects/GDC/"
+
+# Get the list of subdirectories in the base directory (one level deep)
+folder_names <- list.dirs(base, full.names = TRUE, recursive = FALSE)
+
+# Initialize an empty list to store dimensions
+file_dimensions <- list()
+
+# Loop through each folder to find and load the Expression_...csv files
+for (folder in folder_names) {
+  # Get the list of Expression_...csv files in the current folder
+  file_paths <- list.files(folder, pattern = "^Expression_.*\\.csv$", full.names = TRUE)
+  
+  # Loop through each file and get its dimensions
+  for (file in file_paths) {
+    # Read the csv file
+    data <- read.csv(file)
+    
+    # Get the dimensions (rows and columns)
+    dims <- dim(data)
+    
+    # Store the file name and its dimensions
+    file_dimensions[[file]] <- dims
+  }
+}
+
+# Print the file dimensions
+print(file_dimensions)
+
+```
+
+
+
+```{r}
+
+
+# Define the base directory
+
+base_dir <- "/Users/rxk519/Desktop/Projects/GDC"
+
+# List all CSV files with the pattern "Expression_*.csv" recursively in all subdirectories
+files <- list.files(base_dir, pattern = "Expression_.*\\.csv$", full.names = TRUE, recursive = TRUE)
+
+# Read all files into a list of data frames
+data_list <- lapply(files, read.csv)
+
+# Combine the data frames by columns (cbind)
+combined_data <- do.call(cbind, data_list)
+
+# Check the first few rows of the combined data
+head(combined_data)
+
+# Check the dimensions of the combined data to ensure it is correct
+dim(combined_data)
+
+cols_to_remove <- grep("gene_id|gene_name|gene_type", colnames(combined_data))
+
+cols_to_remove1 <- cols_to_remove[-c(1:3)]
+
+
+combined_data_clean <- combined_data[, -cols_to_remove1]
+
+dim(combined_data_clean )
+
+write.csv(combined_data_clean , "/Users/rxk519/Desktop/Projects/GDC/GDC_Combined_Expression.csv")
+
+
+
+# Optionally, save the merged data to a CSV
+write.csv(final_merged_data, "/path/to/save/merged_expression_data.csv", row.names = FALSE)
+```
+
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
