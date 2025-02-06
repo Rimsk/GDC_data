@@ -1,8 +1,6 @@
 # GDC_data
 GDC Download Pipeline Using R
 
-GDC Download Pipeline Using R
-
 This repository provides an R-based pipeline for downloading genomic data from the Genomic Data Commons (GDC), part of the National Cancer Institute (NCI). The pipeline allows users to efficiently retrieve, process, and store datasets from GDC, including whole-genome sequencing data, gene expression data, and other bioinformatics files.
 
 Features
